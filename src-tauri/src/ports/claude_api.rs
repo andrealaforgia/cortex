@@ -1,3 +1,4 @@
+use futures::StreamExt;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -59,50 +60,56 @@ pub async fn send_message_streaming(
         return Err(format!("API error {}: {}", status, body));
     }
 
-    // Parse SSE stream
-    let text = response
-        .text()
-        .await
-        .map_err(|e| format!("Failed to read response: {}", e))?;
-
+    // Real-time SSE streaming: process chunks as they arrive
+    let mut stream = response.bytes_stream();
+    let mut buffer = String::new();
     let mut model_name = String::new();
     let mut input_tokens: u32 = 0;
     let mut output_tokens: u32 = 0;
     let mut stop_reason = String::from("end_turn");
 
-    for line in text.lines() {
-        if !line.starts_with("data: ") {
-            continue;
-        }
-        let data = &line[6..];
-        if data == "[DONE]" {
-            break;
-        }
+    while let Some(chunk_result) = stream.next().await {
+        let chunk = chunk_result.map_err(|e| format!("Stream read error: {}", e))?;
+        buffer.push_str(&String::from_utf8_lossy(&chunk));
 
-        if let Ok(event) = serde_json::from_str::<serde_json::Value>(data) {
-            match event["type"].as_str() {
-                Some("message_start") => {
-                    if let Some(m) = event["message"]["model"].as_str() {
-                        model_name = m.to_string();
+        // Process complete lines from buffer
+        while let Some(newline_pos) = buffer.find('\n') {
+            let line = buffer[..newline_pos].trim_end().to_string();
+            buffer = buffer[newline_pos + 1..].to_string();
+
+            if !line.starts_with("data: ") {
+                continue;
+            }
+            let data = &line[6..];
+            if data == "[DONE]" {
+                continue;
+            }
+
+            if let Ok(event) = serde_json::from_str::<serde_json::Value>(data) {
+                match event["type"].as_str() {
+                    Some("message_start") => {
+                        if let Some(m) = event["message"]["model"].as_str() {
+                            model_name = m.to_string();
+                        }
+                        if let Some(t) = event["message"]["usage"]["input_tokens"].as_u64() {
+                            input_tokens = t as u32;
+                        }
                     }
-                    if let Some(t) = event["message"]["usage"]["input_tokens"].as_u64() {
-                        input_tokens = t as u32;
+                    Some("content_block_delta") => {
+                        if let Some(text) = event["delta"]["text"].as_str() {
+                            on_event(StreamEvent::TextDelta(text.to_string()));
+                        }
                     }
+                    Some("message_delta") => {
+                        if let Some(sr) = event["delta"]["stop_reason"].as_str() {
+                            stop_reason = sr.to_string();
+                        }
+                        if let Some(t) = event["usage"]["output_tokens"].as_u64() {
+                            output_tokens = t as u32;
+                        }
+                    }
+                    _ => {}
                 }
-                Some("content_block_delta") => {
-                    if let Some(text) = event["delta"]["text"].as_str() {
-                        on_event(StreamEvent::TextDelta(text.to_string()));
-                    }
-                }
-                Some("message_delta") => {
-                    if let Some(sr) = event["delta"]["stop_reason"].as_str() {
-                        stop_reason = sr.to_string();
-                    }
-                    if let Some(t) = event["usage"]["output_tokens"].as_u64() {
-                        output_tokens = t as u32;
-                    }
-                }
-                _ => {}
             }
         }
     }
