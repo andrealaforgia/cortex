@@ -1,0 +1,36 @@
+sequenceDiagram
+    participant User
+    participant xterm as xterm.js
+    participant Hook as useTerminal
+    participant Bridge as tauri-bridge
+    participant Cmd as terminal.rs
+    participant PTY as PtyHandle
+    participant Shell as Shell Process
+
+    Note over User,Shell: Session Creation
+    Hook->>Bridge: createTerminalSession()
+    Bridge->>Cmd: invoke("create_terminal_session")
+    Cmd->>PTY: PtyHandle::spawn("/bin/zsh", 24, 80)
+    PTY->>Shell: fork + exec shell
+    PTY-->>Cmd: (PtyHandle, PtyReader)
+    Cmd->>Cmd: Store in SessionMap
+    Cmd->>Cmd: spawn pty_read_loop thread
+    Cmd-->>Bridge: { session_id }
+    Bridge-->>Hook: session_id
+    Hook->>Hook: Setup xterm.onData + onResize
+
+    Note over User,Shell: Keystroke Flow
+    User->>xterm: Types "ls -la\n"
+    xterm->>Hook: onData(bytes)
+    Hook->>Bridge: writeToPty(sid, bytes)
+    Bridge->>Cmd: invoke("write_to_pty")
+    Cmd->>PTY: handle.write(bytes)
+    PTY->>Shell: write to master fd
+
+    Note over User,Shell: Output Flow
+    Shell->>PTY: writes output to slave
+    PTY->>Cmd: pty_read_loop reads 4096 bytes
+    Cmd->>Bridge: emit("pty:data", {sid, data})
+    Bridge->>Hook: onPtyData callback
+    Hook->>xterm: terminal.write(decoded text)
+    xterm->>User: Renders output

@@ -1,0 +1,32 @@
+sequenceDiagram
+    participant FE as Frontend
+    participant Cmd as ai.rs
+    participant Ctx as context.rs
+    participant Red as RedactionEngine
+    participant API as claude_api.rs
+    participant Claude as api.anthropic.com
+
+    FE->>Cmd: invoke("ai_translate_command", {query, context})
+    Cmd->>Cmd: Generate request_id (UUID)
+    Cmd-->>FE: { request_id } (immediate return)
+
+    Note over Cmd,Claude: Async task spawned
+    Cmd->>Ctx: build_system_prompt(context, redaction)
+    Ctx->>Red: redact(recent_commands)
+    Red-->>Ctx: sanitized context
+    Ctx-->>Cmd: system prompt string
+
+    Cmd->>API: send_message_streaming(key, model, prompt, messages, callback)
+    API->>Claude: POST /v1/messages (stream: true)
+    Claude-->>API: SSE: message_start
+    API->>API: Extract model name, input_tokens
+
+    loop For each SSE chunk
+        Claude-->>API: SSE: content_block_delta
+        API->>Cmd: callback(TextDelta(text))
+        Cmd->>FE: emit("ai:stream-chunk", {rid, text})
+    end
+
+    Claude-->>API: SSE: message_delta (stop_reason, output_tokens)
+    API->>Cmd: callback(Completion(metadata))
+    Cmd->>FE: emit("ai:stream-end", {rid, model, tokens})

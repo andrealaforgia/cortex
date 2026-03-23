@@ -1,0 +1,58 @@
+graph TB
+    subgraph "Driving Side (Primary Adapters)"
+        UI["React + xterm.js\n(TerminalView.tsx)"]
+        IPC["Tauri IPC Bridge\n(tauri-bridge.ts)"]
+    end
+
+    subgraph "Application Core"
+        subgraph "Tauri Commands (commands/)"
+            C_TERM["terminal.rs\ncreate_terminal_session\nwrite_to_pty\nresize_pty\nclose_terminal_session"]
+            C_AI["ai.rs\nai_translate_command\nai_explain_error\nai_chat\nai_cancel"]
+            C_CFG["config.rs\nget_config / set_config\nstore_api_key\nhas_api_key / delete_api_key"]
+        end
+
+        subgraph "Domain Logic (domain/)"
+            CTX["context.rs\nShellContext\nbuild_system_prompt\nbuild_error_diagnosis_prompt"]
+            RED["redaction.rs\nRedactionEngine\n6 regex patterns"]
+        end
+    end
+
+    subgraph "Driven Side (ports/)"
+        PTY["pty.rs\nPtyHandle + PtyReader\nportable-pty"]
+        API["claude_api.rs\nSSE streaming\nreqwest"]
+        DB["storage.rs\nSQLite + rusqlite\n6 tables"]
+    end
+
+    subgraph "External"
+        SHELL["Shell Process"]
+        CLAUDE["Claude API"]
+        SQLITE["SQLite File"]
+    end
+
+    UI --> IPC
+    IPC --> C_TERM
+    IPC --> C_AI
+    IPC --> C_CFG
+
+    C_AI --> CTX
+    C_AI --> RED
+    CTX --> RED
+
+    C_TERM --> PTY
+    C_AI --> API
+    C_CFG --> DB
+
+    PTY --> SHELL
+    API --> CLAUDE
+    DB --> SQLITE
+
+    style UI fill:#89b4fa,color:#1e1e2e
+    style IPC fill:#89b4fa,color:#1e1e2e
+    style C_TERM fill:#a6e3a1,color:#1e1e2e
+    style C_AI fill:#a6e3a1,color:#1e1e2e
+    style C_CFG fill:#a6e3a1,color:#1e1e2e
+    style CTX fill:#f9e2af,color:#1e1e2e
+    style RED fill:#f9e2af,color:#1e1e2e
+    style PTY fill:#f5c2e7,color:#1e1e2e
+    style API fill:#f5c2e7,color:#1e1e2e
+    style DB fill:#f5c2e7,color:#1e1e2e

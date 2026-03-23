@@ -1,0 +1,35 @@
+graph LR
+    subgraph "Frontend to Backend (Tauri Commands)"
+        direction TB
+        C1["create_terminal_session\nshell?, cwd? -> session_id"]
+        C2["write_to_pty\nsession_id, data -> void"]
+        C3["resize_pty\nsession_id, rows, cols -> void"]
+        C4["close_terminal_session\nsession_id -> void"]
+        C5["ai_translate_command\nquery, context -> request_id"]
+        C6["ai_explain_error\ncmd, output, code, ctx -> request_id"]
+        C7["ai_chat\nmessage, conv_id?, ctx -> request_id"]
+    end
+
+    subgraph "Backend to Frontend (Tauri Events)"
+        direction TB
+        E1["pty:data\nsession_id, data bytes"]
+        E2["pty:exit\nsession_id, exit code"]
+        E3["pty:error\nsession_id, error_type, message"]
+        E4["ai:stream-chunk\nrequest_id, text"]
+        E5["ai:stream-end\nrequest_id, model, tokens"]
+        E6["ai:error\nrequest_id, error_type, message"]
+    end
+
+    style C1 fill:#89b4fa,color:#1e1e2e
+    style C2 fill:#89b4fa,color:#1e1e2e
+    style C3 fill:#89b4fa,color:#1e1e2e
+    style C4 fill:#89b4fa,color:#1e1e2e
+    style C5 fill:#89b4fa,color:#1e1e2e
+    style C6 fill:#89b4fa,color:#1e1e2e
+    style C7 fill:#89b4fa,color:#1e1e2e
+    style E1 fill:#a6e3a1,color:#1e1e2e
+    style E2 fill:#a6e3a1,color:#1e1e2e
+    style E3 fill:#a6e3a1,color:#1e1e2e
+    style E4 fill:#f9e2af,color:#1e1e2e
+    style E5 fill:#f9e2af,color:#1e1e2e
+    style E6 fill:#f38ba8,color:#1e1e2e

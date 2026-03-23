@@ -1,0 +1,393 @@
+{
+  "project": {
+    "name": "Cortex AI Terminal",
+    "version": "v2-phase1",
+    "status": "phase-1-complete",
+    "description": "AI-driven terminal emulator with Claude API integration, built with Tauri v2",
+    "repository": "/Users/andrealaforgia/dev/cortex",
+    "analyzed_at": "2026-03-23"
+  },
+  "scan": {
+    "total_project_files": 87,
+    "total_source_lines": 1709,
+    "languages": {
+      "rust": {
+        "files": 13,
+        "lines": 1124,
+        "percentage": 65.8
+      },
+      "typescript_tsx": {
+        "files": 9,
+        "lines": 517,
+        "percentage": 30.2
+      },
+      "shell": {
+        "files": 3,
+        "lines": 68,
+        "percentage": 4.0
+      }
+    },
+    "source_code_files": 25,
+    "documentation_files": 5,
+    "test_files": 0,
+    "test_count": 4,
+    "config_files": 7,
+    "has_source_code": true,
+    "has_ci_cd": false,
+    "has_tests": true,
+    "git_commits": 5
+  },
+  "source_files": {
+    "backend": {
+      "src-tauri/src/lib.rs": { "lines": 58, "module": "entry", "purpose": "App bootstrap, state init, command registration" },
+      "src-tauri/src/main.rs": { "lines": 6, "module": "entry", "purpose": "Binary entry point" },
+      "src-tauri/src/commands/mod.rs": { "lines": 3, "module": "commands", "purpose": "Module re-exports" },
+      "src-tauri/src/commands/terminal.rs": { "lines": 140, "module": "commands", "purpose": "PTY session CRUD + read loop" },
+      "src-tauri/src/commands/ai.rs": { "lines": 301, "module": "commands", "purpose": "AI translate, explain, chat commands" },
+      "src-tauri/src/commands/config.rs": { "lines": 67, "module": "commands", "purpose": "Config and API key management" },
+      "src-tauri/src/domain/mod.rs": { "lines": 2, "module": "domain", "purpose": "Module re-exports" },
+      "src-tauri/src/domain/context.rs": { "lines": 78, "module": "domain", "purpose": "Shell context and prompt construction" },
+      "src-tauri/src/domain/redaction.rs": { "lines": 77, "module": "domain", "purpose": "Secret redaction engine + 4 tests" },
+      "src-tauri/src/ports/mod.rs": { "lines": 3, "module": "ports", "purpose": "Module re-exports" },
+      "src-tauri/src/ports/pty.rs": { "lines": 95, "module": "ports", "purpose": "PtyHandle + PtyReader wrappers" },
+      "src-tauri/src/ports/claude_api.rs": { "lines": 140, "module": "ports", "purpose": "HTTP + SSE stream parsing" },
+      "src-tauri/src/ports/storage.rs": { "lines": 154, "module": "ports", "purpose": "SQLite schema + CRUD operations" }
+    },
+    "frontend": {
+      "src/main.tsx": { "lines": 9, "module": "entry", "purpose": "React root mount" },
+      "src/App.tsx": { "lines": 9, "module": "components", "purpose": "Root layout component" },
+      "src/components/terminal/TerminalView.tsx": { "lines": 54, "module": "components", "purpose": "Terminal container + error banner" },
+      "src/hooks/useTerminal.ts": { "lines": 148, "module": "hooks", "purpose": "Terminal lifecycle management" },
+      "src/lib/tauri-bridge.ts": { "lines": 162, "module": "lib", "purpose": "Typed IPC wrappers" },
+      "src/lib/types.ts": { "lines": 60, "module": "lib", "purpose": "Shared TypeScript types" },
+      "src/stores/terminalStore.ts": { "lines": 30, "module": "stores", "purpose": "Terminal session state" },
+      "src/stores/aiStore.ts": { "lines": 45, "module": "stores", "purpose": "AI conversation state" },
+      "src/vite-env.d.ts": { "lines": 1, "module": "lib", "purpose": "Vite type declarations" }
+    },
+    "shell_integration": {
+      "shell-integration/bash-integration.sh": { "lines": 28, "purpose": "OSC 133 for bash" },
+      "shell-integration/zsh-integration.zsh": { "lines": 22, "purpose": "OSC 133 for zsh" },
+      "shell-integration/fish-integration.fish": { "lines": 18, "purpose": "OSC 133 for fish" }
+    }
+  },
+  "architecture": {
+    "style": "Hexagonal (Ports and Adapters) -- simplified for MVP",
+    "deployment": "Monolithic Tauri v2 Desktop Application",
+    "layers_detected": 4,
+    "layers": [
+      { "name": "commands", "files": 4, "lines": 511, "purpose": "Tauri IPC command handlers (primary adapters)" },
+      { "name": "domain", "files": 3, "lines": 157, "purpose": "Business logic (context builder, redaction)" },
+      { "name": "ports", "files": 4, "lines": 392, "purpose": "Infrastructure implementations (PTY, API, SQLite)" },
+      { "name": "frontend", "files": 9, "lines": 517, "purpose": "React + xterm.js UI and state management" }
+    ],
+    "circular_dependencies": 0,
+    "entry_points_identified": 2,
+    "entry_points": [
+      "src-tauri/src/main.rs -> lib.rs::run()",
+      "src/main.tsx -> App -> TerminalView"
+    ],
+    "naming_consistency_score": 85,
+    "domain_isolation_verified": true,
+    "domain_isolation_details": "domain/context.rs imports only domain/redaction and serde. domain/redaction.rs imports only regex. Neither imports from commands/ or ports/.",
+    "design_vs_implementation_gaps": [
+      "No adapters/ directory (design doc planned one)",
+      "Ports contain concrete implementations, not trait definitions",
+      "No formal StreamingCallbacks trait (uses closure instead)",
+      "No keychain integration (uses env var instead)",
+      "No Block Manager component yet",
+      "No OSC 133 parser in frontend yet"
+    ]
+  },
+  "ipc_contracts": {
+    "commands_count": 13,
+    "events_count": 6,
+    "commands": {
+      "terminal": [
+        { "name": "create_terminal_session", "params": "shell?, cwd?", "returns": "{ session_id }" },
+        { "name": "write_to_pty", "params": "session_id, data", "returns": "void" },
+        { "name": "resize_pty", "params": "session_id, rows, cols", "returns": "void" },
+        { "name": "close_terminal_session", "params": "session_id", "returns": "void" }
+      ],
+      "ai": [
+        { "name": "ai_translate_command", "params": "query, shell_context", "returns": "{ request_id }" },
+        { "name": "ai_explain_error", "params": "command, output, exit_code, shell_context", "returns": "{ request_id }" },
+        { "name": "ai_chat", "params": "message, conversation_id?, shell_context", "returns": "{ request_id, conversation_id }" },
+        { "name": "ai_cancel", "params": "request_id", "returns": "void (no-op)" }
+      ],
+      "config": [
+        { "name": "get_config", "params": "none", "returns": "HashMap<String, String>" },
+        { "name": "set_config", "params": "config map", "returns": "void" },
+        { "name": "store_api_key", "params": "key", "returns": "{ valid, error? }" },
+        { "name": "has_api_key", "params": "none", "returns": "{ exists }" },
+        { "name": "delete_api_key", "params": "none", "returns": "void" }
+      ]
+    },
+    "events": {
+      "pty": [
+        { "name": "pty:data", "payload": "session_id, data (bytes)" },
+        { "name": "pty:exit", "payload": "session_id, code" },
+        { "name": "pty:error", "payload": "session_id, error_type, message" }
+      ],
+      "ai": [
+        { "name": "ai:stream-chunk", "payload": "request_id, text" },
+        { "name": "ai:stream-end", "payload": "request_id, model, input_tokens, output_tokens, stop_reason" },
+        { "name": "ai:error", "payload": "request_id, error_type, message" }
+      ]
+    }
+  },
+  "database": {
+    "engine": "SQLite 3 (bundled via rusqlite)",
+    "journal_mode": "WAL",
+    "foreign_keys": true,
+    "tables": [
+      { "name": "config", "type": "key-value", "primary_key": "key TEXT" },
+      { "name": "command_history", "type": "event-log", "primary_key": "id TEXT (UUID)", "indexes": ["session_id", "created_at"] },
+      { "name": "ai_cache", "type": "content-addressable-cache", "primary_key": "prompt_hash TEXT" },
+      { "name": "ai_conversations", "type": "entity", "primary_key": "id TEXT (UUID)" },
+      { "name": "ai_messages", "type": "entity", "primary_key": "id TEXT (UUID)", "foreign_keys": ["conversation_id -> ai_conversations"], "indexes": ["conversation_id + created_at"] },
+      { "name": "schema_version", "type": "metadata", "primary_key": "version INTEGER" }
+    ]
+  },
+  "test_results": {
+    "framework": "cargo test (Rust built-in)",
+    "total_tests": 4,
+    "passed": 4,
+    "failed": 0,
+    "test_details": [
+      { "name": "domain::redaction::tests::test_redacts_api_keys", "status": "passed" },
+      { "name": "domain::redaction::tests::test_redacts_bearer_tokens", "status": "passed" },
+      { "name": "domain::redaction::tests::test_redacts_connection_strings", "status": "passed" },
+      { "name": "domain::redaction::tests::test_leaves_normal_text", "status": "passed" }
+    ],
+    "compiler_warnings": [
+      "methods get_config and save_command_history are never used (dead code)"
+    ],
+    "frontend_test_framework": "none configured"
+  },
+  "security": {
+    "redaction_patterns": 6,
+    "redaction_tested": true,
+    "api_key_storage": "environment variable (ANTHROPIC_API_KEY)",
+    "api_key_keychain": false,
+    "no_intermediary_server": true,
+    "csp_configured": false,
+    "tauri_capabilities": ["core:default"]
+  },
+  "technology_stack": {
+    "backend": {
+      "language": "Rust (edition 2021, MSRV 1.77.2)",
+      "framework": "Tauri v2.10.3",
+      "async_runtime": "Tokio 1.x (full features)",
+      "key_crates": {
+        "portable-pty": "0.8",
+        "reqwest": "0.12 (stream + json features)",
+        "rusqlite": "0.31 (bundled)",
+        "serde": "1.0",
+        "serde_json": "1.0",
+        "regex": "1",
+        "uuid": "1 (v4)",
+        "chrono": "0.4",
+        "futures": "0.3",
+        "thiserror": "1",
+        "dirs-next": "2"
+      }
+    },
+    "frontend": {
+      "language": "TypeScript 5.5+",
+      "framework": "React 18.3",
+      "build_tool": "Vite 5.4",
+      "terminal": "@xterm/xterm 5.5",
+      "state_management": "Zustand 4.5",
+      "key_packages": {
+        "@tauri-apps/api": "^2.0.0",
+        "@xterm/xterm": "^5.5.0",
+        "@xterm/addon-fit": "^0.10.0",
+        "@xterm/addon-webgl": "^0.18.0",
+        "@xterm/addon-web-links": "^0.11.0",
+        "zustand": "^4.5.0"
+      }
+    }
+  },
+  "design_decisions": {
+    "total": 18,
+    "documented": 12,
+    "inferred": 6,
+    "documented_list": [
+      "ADR-001: Tauri v2 over Electron",
+      "ADR-002: xterm.js + WebGL over custom renderer",
+      "ADR-003: portable-pty for PTY management",
+      "ADR-004: reqwest + manual SSE for Claude API",
+      "ADR-005: Streaming callback pattern (closure-based)",
+      "ADR-006: SQLite via rusqlite with WAL mode",
+      "ADR-007: OSC 133 for block detection",
+      "ADR-008: OS keychain for API key storage (deferred)",
+      "ADR-009: Redaction engine for security",
+      "ADR-010: Hexagonal architecture",
+      "ADR-011: Zustand for frontend state",
+      "ADR-012: AI conversation binding rules"
+    ],
+    "inferred_list": [
+      "INF-001: Deferred trait-based abstraction for MVP",
+      "INF-002: Dedicated OS thread for PTY read loop",
+      "INF-003: Full-body SSE parsing instead of true streaming",
+      "INF-004: Catppuccin Mocha theme hardcoded",
+      "INF-005: Pragmatic cleanup storage in useTerminal",
+      "INF-006: Session map with Arc-Mutex-HashMap"
+    ]
+  },
+  "risks": [
+    {
+      "description": "SSE parsing buffers full response before firing callbacks -- defeats streaming purpose",
+      "severity": "high",
+      "file": "src-tauri/src/ports/claude_api.rs",
+      "line": 63,
+      "mitigation": "Switch from response.text().await to response.bytes_stream() with incremental parsing"
+    },
+    {
+      "description": "Minimal test coverage (4 tests, redaction only)",
+      "severity": "medium",
+      "mitigation": "Add integration tests for PTY lifecycle and SQLite operations; add mock adapters"
+    },
+    {
+      "description": "No CI/CD pipeline",
+      "severity": "medium",
+      "mitigation": "Set up GitHub Actions with cargo check, cargo test, cargo clippy, tsc --noEmit"
+    },
+    {
+      "description": "ai_cancel is a no-op",
+      "severity": "low",
+      "file": "src-tauri/src/commands/ai.rs",
+      "line": 298,
+      "mitigation": "Implement using Tokio AbortHandle to cancel in-flight requests"
+    },
+    {
+      "description": "Dead code: get_config and save_command_history unused",
+      "severity": "low",
+      "file": "src-tauri/src/ports/storage.rs",
+      "mitigation": "Will be used when block persistence is implemented in Phase 2"
+    },
+    {
+      "description": "TypeScript type safety bypass in useTerminal cleanup",
+      "severity": "low",
+      "file": "src/hooks/useTerminal.ts",
+      "line": 114,
+      "mitigation": "Replace (terminal as any) with a useRef for cleanup function storage"
+    }
+  ],
+  "implementation_status": {
+    "implemented": [
+      "Tauri v2 scaffold with build/dev configuration",
+      "PTY spawn, read, write, resize, close lifecycle",
+      "xterm.js terminal with WebGL rendering and Catppuccin theme",
+      "Claude API client with SSE streaming (buffered)",
+      "Redaction engine with 6 patterns and 4 tests",
+      "SQLite schema with 6 tables and WAL mode",
+      "Shell integration scripts for bash, zsh, fish",
+      "Zustand stores for terminal and AI state",
+      "Full Tauri IPC bridge with 13 commands and 6 event types",
+      "API key validation endpoint"
+    ],
+    "planned_not_implemented": [
+      "OSC 133 block detection and parsing (frontend parser)",
+      "AI Panel sidebar UI",
+      "Settings UI and theme switching",
+      "Keychain integration (keyring crate)",
+      "Command suggestions with confirm/reject UI",
+      "AI response caching",
+      "Multi-tab terminal sessions",
+      "CI/CD pipeline",
+      "Inline suggestion (ghost text)",
+      "Search addon integration"
+    ]
+  },
+  "overall_score": 62,
+  "summary": "Cortex Phase 1 delivers a functional terminal emulator with AI infrastructure. The hexagonal architecture's critical invariant (domain independence) is preserved. The codebase is compact (1,709 lines) and well-organized. The main gaps are: SSE streaming is buffered not real-time, test coverage is minimal (4 tests), and no CI/CD pipeline exists. The architecture maps closely to the design documents with pragmatic simplifications (concrete implementations instead of trait abstractions).",
+  "documentation_coverage": {
+    "readme_present": false,
+    "adrs_count": 0,
+    "adrs_recoverable": 18,
+    "inline_doc_ratio": 0.05,
+    "api_doc_present": false,
+    "research_doc_present": true,
+    "architecture_doc_present": true,
+    "component_doc_present": true,
+    "data_model_doc_present": true,
+    "tech_stack_doc_present": true
+  },
+  "architecture_clarity": {
+    "layers_detected": 4,
+    "circular_dependencies": 0,
+    "entry_points_identified": 2,
+    "naming_consistency_score": 85,
+    "domain_isolation_verified": true,
+    "port_definitions_complete": false,
+    "adapter_mappings_complete": false,
+    "ipc_contracts_defined": true,
+    "ipc_contracts_implemented": true,
+    "data_flows_documented": 4,
+    "error_handling_documented": true,
+    "concurrency_model_documented": true
+  },
+  "hotspot_count": 2,
+  "top_hotspots": [
+    {
+      "file": "src-tauri/src/commands/ai.rs",
+      "complexity_score": 7.5,
+      "change_frequency": 1,
+      "lines": 301,
+      "reason": "Largest file. Contains repetitive streaming patterns across 3 AI commands. Each command duplicates the spawn-task + callback structure."
+    },
+    {
+      "file": "src-tauri/src/ports/claude_api.rs",
+      "complexity_score": 6.0,
+      "change_frequency": 1,
+      "lines": 140,
+      "reason": "SSE parsing logic with multiple match arms. Buffered parsing approach needs rework for true streaming."
+    }
+  ],
+  "risk_distribution": {
+    "critical": 0,
+    "high": 1,
+    "medium": 2,
+    "low": 3
+  },
+  "recommendations": [
+    {
+      "priority": 1,
+      "title": "Fix SSE streaming to be truly incremental",
+      "description": "Replace response.text().await with response.bytes_stream() in claude_api.rs to process SSE chunks as they arrive from the network, enabling real-time streaming to the frontend.",
+      "effort": "medium",
+      "file": "src-tauri/src/ports/claude_api.rs"
+    },
+    {
+      "priority": 2,
+      "title": "Add integration tests for PTY and SQLite",
+      "description": "Create integration tests for PTY spawn/read/write cycle (using a simple shell command like 'echo hello') and for SQLite schema initialization + config CRUD operations.",
+      "effort": "medium"
+    },
+    {
+      "priority": 3,
+      "title": "Implement OSC 133 parser in frontend",
+      "description": "Create src/lib/osc133.ts to parse OSC 133 escape sequences from terminal output, enabling block detection. This is the core of Phase 2.",
+      "effort": "medium"
+    },
+    {
+      "priority": 4,
+      "title": "Set up CI/CD pipeline",
+      "description": "Create GitHub Actions workflow with: cargo check, cargo test, cargo clippy, tsc --noEmit. Run on push to main and PRs.",
+      "effort": "low"
+    },
+    {
+      "priority": 5,
+      "title": "Extract streaming callback pattern to reduce duplication",
+      "description": "The three AI commands (translate, explain, chat) in ai.rs repeat the same spawn + callback + error handling structure. Extract a shared helper function to reduce the 301-line file.",
+      "effort": "low"
+    },
+    {
+      "priority": 6,
+      "title": "Add a README.md",
+      "description": "The repository still has no README. Add one with project overview, prerequisites, setup instructions, and links to design documents.",
+      "effort": "low"
+    }
+  ]
+}

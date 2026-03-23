@@ -1,0 +1,43 @@
+graph TB
+    subgraph "main.rs / lib.rs"
+        MAIN["lib.rs::run()\nApp bootstrap\nState initialization\nCommand registration"]
+    end
+
+    subgraph "commands/ (Primary Adapters)"
+        CMD_TERM["terminal.rs\n4 Tauri commands\n140 lines"]
+        CMD_AI["ai.rs\n4 Tauri commands\n301 lines"]
+        CMD_CFG["config.rs\n5 Tauri commands\n67 lines"]
+    end
+
+    subgraph "domain/ (Business Logic)"
+        DOM_CTX["context.rs\nShellContext struct\nbuild_system_prompt()\nbuild_error_diagnosis_prompt()\n78 lines"]
+        DOM_RED["redaction.rs\nRedactionEngine\n6 regex patterns\n4 unit tests\n77 lines"]
+    end
+
+    subgraph "ports/ (Infrastructure)"
+        PORT_PTY["pty.rs\nPtyHandle + PtyReader\nspawn / write / resize / kill\n95 lines"]
+        PORT_API["claude_api.rs\nsend_message_streaming()\nSSE parsing\nvalidate_api_key()\n140 lines"]
+        PORT_STORE["storage.rs\nStorage (SQLite)\n6 tables, WAL mode\nget/set config\nsave_command_history\n154 lines"]
+    end
+
+    MAIN --> CMD_TERM
+    MAIN --> CMD_AI
+    MAIN --> CMD_CFG
+
+    CMD_TERM --> PORT_PTY
+    CMD_AI --> DOM_CTX
+    CMD_AI --> DOM_RED
+    CMD_AI --> PORT_API
+    CMD_CFG --> PORT_STORE
+
+    DOM_CTX --> DOM_RED
+
+    style MAIN fill:#89b4fa,color:#1e1e2e
+    style CMD_TERM fill:#a6e3a1,color:#1e1e2e
+    style CMD_AI fill:#a6e3a1,color:#1e1e2e
+    style CMD_CFG fill:#a6e3a1,color:#1e1e2e
+    style DOM_CTX fill:#f9e2af,color:#1e1e2e
+    style DOM_RED fill:#f9e2af,color:#1e1e2e
+    style PORT_PTY fill:#f5c2e7,color:#1e1e2e
+    style PORT_API fill:#f5c2e7,color:#1e1e2e
+    style PORT_STORE fill:#f5c2e7,color:#1e1e2e

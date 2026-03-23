@@ -1,0 +1,41 @@
+graph TB
+    subgraph "Entry Point"
+        MAIN_TSX["main.tsx\nReact root mount"]
+    end
+
+    subgraph "Components"
+        APP["App.tsx\nFull-viewport container"]
+        TV["TerminalView.tsx\nxterm.js container\nError banner overlay"]
+    end
+
+    subgraph "Hooks"
+        UT["useTerminal.ts\nTerminal lifecycle\nPTY session creation\nxterm.js setup\nEvent listeners\n148 lines"]
+    end
+
+    subgraph "Stores (Zustand)"
+        TS["terminalStore.ts\nsessionId, blocks, error\nsetSessionId, addBlock\nupdateBlock, setError"]
+        AS["aiStore.ts\nisStreaming, streamingText\nconversations, error\nappendStreamText\naddMessage"]
+    end
+
+    subgraph "Library"
+        TB["tauri-bridge.ts\n13 invoke wrappers\n6 event listeners\nTyped payloads\n162 lines"]
+        TY["types.ts\nBlock, ShellContext\nCommandEntry\nAppConfig, AIMessage\n60 lines"]
+    end
+
+    MAIN_TSX --> APP
+    APP --> TV
+    TV --> UT
+    UT --> TS
+    UT --> TB
+    AS --> TY
+    TS --> TY
+    TB --> TY
+
+    style MAIN_TSX fill:#89b4fa,color:#1e1e2e
+    style APP fill:#a6e3a1,color:#1e1e2e
+    style TV fill:#a6e3a1,color:#1e1e2e
+    style UT fill:#f9e2af,color:#1e1e2e
+    style TS fill:#f5c2e7,color:#1e1e2e
+    style AS fill:#f5c2e7,color:#1e1e2e
+    style TB fill:#94e2d5,color:#1e1e2e
+    style TY fill:#94e2d5,color:#1e1e2e

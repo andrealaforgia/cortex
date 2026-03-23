@@ -1,0 +1,41 @@
+graph TB
+    subgraph "External Systems"
+        CLAUDE["api.anthropic.com\n(Claude API)"]
+        SHELL["Shell Process\n(bash / zsh / fish)"]
+        FS["File System\n(SQLite DB)"]
+        KEYCHAIN["OS Keychain\n(macOS Keychain)"]
+    end
+
+    subgraph "Cortex AI Terminal"
+        direction TB
+        subgraph "Frontend (React + TypeScript)"
+            XTERM["xterm.js\nTerminal Emulator"]
+            STORES["Zustand Stores\n(terminal + AI state)"]
+            BRIDGE["Tauri Bridge\n(IPC Layer)"]
+        end
+
+        subgraph "Backend (Rust + Tauri v2)"
+            CMDS["Tauri Commands\n(Primary Adapters)"]
+            DOMAIN["Domain Logic\n(Context + Redaction)"]
+            PORTS["Infrastructure\n(PTY + API + Storage)"]
+        end
+    end
+
+    USER["Developer\n(User)"]
+
+    USER -->|"Types commands\nRequests AI help"| XTERM
+    XTERM --> STORES
+    STORES --> BRIDGE
+    BRIDGE -->|"Tauri IPC\n(invoke + events)"| CMDS
+    CMDS --> DOMAIN
+    DOMAIN --> PORTS
+    PORTS -->|"portable-pty"| SHELL
+    PORTS -->|"reqwest HTTPS"| CLAUDE
+    PORTS -->|"rusqlite"| FS
+    CMDS -->|"env var\n(MVP)"| KEYCHAIN
+
+    style USER fill:#89b4fa,color:#1e1e2e
+    style CLAUDE fill:#f9e2af,color:#1e1e2e
+    style SHELL fill:#a6e3a1,color:#1e1e2e
+    style FS fill:#f5c2e7,color:#1e1e2e
+    style KEYCHAIN fill:#94e2d5,color:#1e1e2e
