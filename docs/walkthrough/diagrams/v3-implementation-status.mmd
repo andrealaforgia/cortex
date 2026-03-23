@@ -1,0 +1,37 @@
+graph TB
+    subgraph Implemented["Implemented (v3 Final)"]
+        style Implemented fill:#1a2e1a,stroke:#a6e3a1,color:#a6e3a1
+        I1["Terminal Emulation<br/>xterm.js + WebGL"]
+        I2["PTY Management<br/>portable-pty spawn/read/write/resize"]
+        I3["AI Chat Sidebar<br/>Full conversation UI"]
+        I4["SSE Streaming<br/>Real-time via bytes_stream()"]
+        I5["Command Translation<br/>/cmd prefix in AI panel"]
+        I6["Error Diagnosis<br/>ai_explain_error command"]
+        I7["Secret Redaction<br/>6 regex patterns + tests"]
+        I8["Settings UI<br/>API key + model selection"]
+        I9["SQLite Persistence<br/>Schema + config CRUD"]
+        I10["Shell Integration<br/>OSC 133 for bash/zsh/fish"]
+        I11["Context Building<br/>Shell state to AI prompts"]
+        I12["API Key Validation<br/>Live test via Claude Haiku"]
+    end
+
+    subgraph Deferred["Designed But Deferred"]
+        style Deferred fill:#2e2a1a,stroke:#f9e2af,color:#f9e2af
+        D1["Block UI<br/>OSC 133 parsing in frontend,<br/>visual block boundaries"]
+        D2["Command Explanation<br/>ai_explain_command endpoint"]
+        D3["Inline Completions<br/>Ghost text suggestions"]
+        D4["Keychain Integration<br/>OS credential storage"]
+        D5["Conversation Persistence<br/>SQLite save/load conversations"]
+        D6["AI Response Caching<br/>prompt_hash based cache"]
+        D7["Command History Query<br/>Search/filter past commands"]
+    end
+
+    subgraph NotStarted["Future / Not Designed"]
+        style NotStarted fill:#2e1a1a,stroke:#f38ba8,color:#f38ba8
+        N1["Multi-tab Sessions"]
+        N2["Session Restore"]
+        N3["Linux / Windows Builds"]
+        N4["AI Tool Use<br/>suggest_command tool"]
+        N5["Theme Switching"]
+        N6["Plugin System"]
+    end

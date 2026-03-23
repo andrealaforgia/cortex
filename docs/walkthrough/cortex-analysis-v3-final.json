@@ -1,0 +1,400 @@
+{
+  "version": "3-final",
+  "analysis_date": "2026-03-23",
+  "project": {
+    "name": "AI Terminal (Cortex)",
+    "version": "0.1.0",
+    "description": "AI-driven terminal emulator with Claude integration",
+    "license": "MIT",
+    "author": "Andrea Laforgia"
+  },
+  "overall_score": 62,
+  "summary": "A well-structured ~2,300-line MVP with clean IPC boundaries and documented design rationale. Strong architecture clarity (hexagonal-inspired layering, consistent naming). Limited by absence of automated tests beyond 4 unit tests, in-memory-only API key storage, and several designed-but-deferred features. Documentation coverage is good (README, 4 design docs) but no ADRs or inline API docs.",
+  "documentation_coverage": {
+    "readme_present": true,
+    "adrs_count": 0,
+    "design_docs_count": 4,
+    "inline_doc_ratio": 0.05,
+    "api_doc_present": false,
+    "doc_files": [
+      "README.md",
+      "docs/feature/ai-terminal/design/architecture-design.md",
+      "docs/feature/ai-terminal/design/component-boundaries.md",
+      "docs/feature/ai-terminal/design/data-models.md",
+      "docs/feature/ai-terminal/design/technology-stack.md",
+      "docs/research/ai-driven-terminal-research.md"
+    ]
+  },
+  "architecture_clarity": {
+    "layers_detected": 3,
+    "layer_names": ["commands (primary adapters)", "domain (business logic)", "ports (secondary adapters)"],
+    "circular_dependencies": 0,
+    "entry_points_identified": 2,
+    "entry_point_files": ["src-tauri/src/main.rs", "src/main.tsx"],
+    "naming_consistency_score": 90,
+    "naming_notes": "Consistent snake_case for Rust, camelCase for TypeScript. Module names match domain concepts. Tauri commands use snake_case matching Rust convention."
+  },
+  "languages": {
+    "rust": {
+      "files": 13,
+      "lines": 1131,
+      "percentage": 49.2
+    },
+    "typescript_tsx": {
+      "files": 10,
+      "lines": 974,
+      "percentage": 42.4
+    },
+    "shell": {
+      "files": 3,
+      "lines": 68,
+      "percentage": 3.0
+    },
+    "config": {
+      "files": 6,
+      "lines": 126,
+      "percentage": 5.5
+    }
+  },
+  "file_inventory": {
+    "total_source_files": 32,
+    "total_source_lines": 2299,
+    "backend_files": {
+      "src-tauri/src/main.rs": { "lines": 6, "role": "entry_point" },
+      "src-tauri/src/lib.rs": { "lines": 58, "role": "bootstrap_and_wiring" },
+      "src-tauri/src/commands/mod.rs": { "lines": 3, "role": "module_declaration" },
+      "src-tauri/src/commands/terminal.rs": { "lines": 140, "role": "pty_ipc_commands" },
+      "src-tauri/src/commands/ai.rs": { "lines": 301, "role": "ai_ipc_commands" },
+      "src-tauri/src/commands/config.rs": { "lines": 67, "role": "config_ipc_commands" },
+      "src-tauri/src/ports/mod.rs": { "lines": 3, "role": "module_declaration" },
+      "src-tauri/src/ports/pty.rs": { "lines": 95, "role": "pty_handle_and_reader" },
+      "src-tauri/src/ports/claude_api.rs": { "lines": 147, "role": "sse_streaming_client" },
+      "src-tauri/src/ports/storage.rs": { "lines": 154, "role": "sqlite_schema_and_crud" },
+      "src-tauri/src/domain/mod.rs": { "lines": 2, "role": "module_declaration" },
+      "src-tauri/src/domain/redaction.rs": { "lines": 77, "role": "secret_redaction_engine" },
+      "src-tauri/src/domain/context.rs": { "lines": 78, "role": "ai_prompt_construction" }
+    },
+    "frontend_files": {
+      "src/main.tsx": { "lines": 9, "role": "react_entry_point" },
+      "src/App.tsx": { "lines": 41, "role": "layout_and_keyboard_shortcuts" },
+      "src/components/terminal/TerminalView.tsx": { "lines": 54, "role": "xterm_container" },
+      "src/components/ai/AIPanel.tsx": { "lines": 237, "role": "chat_sidebar_with_streaming" },
+      "src/components/settings/SettingsView.tsx": { "lines": 188, "role": "settings_modal" },
+      "src/hooks/useTerminal.ts": { "lines": 148, "role": "terminal_lifecycle_hook" },
+      "src/lib/tauri-bridge.ts": { "lines": 162, "role": "typed_ipc_wrappers" },
+      "src/lib/types.ts": { "lines": 60, "role": "shared_type_definitions" },
+      "src/stores/aiStore.ts": { "lines": 45, "role": "ai_state_management" },
+      "src/stores/terminalStore.ts": { "lines": 30, "role": "terminal_state_management" }
+    },
+    "shell_integration_files": {
+      "shell-integration/bash-integration.sh": { "lines": 28, "role": "osc_133_bash" },
+      "shell-integration/zsh-integration.zsh": { "lines": 22, "role": "osc_133_zsh" },
+      "shell-integration/fish-integration.fish": { "lines": 18, "role": "osc_133_fish" }
+    }
+  },
+  "dependencies": {
+    "rust_backend": {
+      "tauri": "2.10.3",
+      "portable-pty": "0.8",
+      "reqwest": "0.12 (stream, json features)",
+      "tokio": "1 (full features)",
+      "serde": "1.0 (derive feature)",
+      "serde_json": "1.0",
+      "rusqlite": "0.31 (bundled feature)",
+      "regex": "1",
+      "uuid": "1 (v4 feature)",
+      "chrono": "0.4",
+      "futures": "0.3",
+      "thiserror": "1",
+      "dirs-next": "2",
+      "log": "0.4",
+      "tauri-plugin-log": "2",
+      "tauri-plugin-shell": "2"
+    },
+    "frontend": {
+      "@tauri-apps/api": "^2.0.0",
+      "@tauri-apps/plugin-shell": "^2.0.0",
+      "@xterm/xterm": "^5.5.0",
+      "@xterm/addon-fit": "^0.10.0",
+      "@xterm/addon-webgl": "^0.18.0",
+      "@xterm/addon-web-links": "^0.11.0",
+      "react": "^18.3.0",
+      "react-dom": "^18.3.0",
+      "zustand": "^4.5.0"
+    }
+  },
+  "ipc_interface": {
+    "commands": [
+      { "name": "create_terminal_session", "module": "terminal", "params": "shell?, cwd?", "returns": "{ session_id }" },
+      { "name": "write_to_pty", "module": "terminal", "params": "session_id, data", "returns": "void" },
+      { "name": "resize_pty", "module": "terminal", "params": "session_id, rows, cols", "returns": "void" },
+      { "name": "close_terminal_session", "module": "terminal", "params": "session_id", "returns": "void" },
+      { "name": "ai_translate_command", "module": "ai", "params": "query, shell_context", "returns": "{ request_id }" },
+      { "name": "ai_explain_error", "module": "ai", "params": "command, output, exit_code, shell_context", "returns": "{ request_id }" },
+      { "name": "ai_chat", "module": "ai", "params": "message, conversation_id?, shell_context", "returns": "{ request_id, conversation_id }" },
+      { "name": "ai_cancel", "module": "ai", "params": "request_id", "returns": "void (no-op)" },
+      { "name": "get_config", "module": "config", "params": "none", "returns": "HashMap<String, String>" },
+      { "name": "set_config", "module": "config", "params": "config", "returns": "void" },
+      { "name": "store_api_key", "module": "config", "params": "key", "returns": "{ valid, error? }" },
+      { "name": "has_api_key", "module": "config", "params": "none", "returns": "{ exists }" },
+      { "name": "delete_api_key", "module": "config", "params": "none", "returns": "void" }
+    ],
+    "events": [
+      { "name": "pty:data", "direction": "backend_to_frontend", "payload": "{ session_id, data: Vec<u8> }" },
+      { "name": "pty:exit", "direction": "backend_to_frontend", "payload": "{ session_id, code }" },
+      { "name": "pty:error", "direction": "backend_to_frontend", "payload": "{ session_id, error_type, message }" },
+      { "name": "ai:stream-chunk", "direction": "backend_to_frontend", "payload": "{ request_id, text }" },
+      { "name": "ai:stream-end", "direction": "backend_to_frontend", "payload": "{ request_id, model, input_tokens, output_tokens, stop_reason }" },
+      { "name": "ai:error", "direction": "backend_to_frontend", "payload": "{ request_id, error_type, message }" }
+    ]
+  },
+  "database_schema": {
+    "tables": [
+      { "name": "config", "columns": 2, "purpose": "Key-value app settings" },
+      { "name": "command_history", "columns": 9, "purpose": "Persisted command blocks", "indexes": 2 },
+      { "name": "ai_cache", "columns": 7, "purpose": "Cached AI responses by prompt hash" },
+      { "name": "ai_conversations", "columns": 4, "purpose": "Chat conversation metadata" },
+      { "name": "ai_messages", "columns": 7, "purpose": "Individual chat messages", "indexes": 1, "foreign_keys": 1 },
+      { "name": "schema_version", "columns": 2, "purpose": "Migration tracking" }
+    ],
+    "total_tables": 6,
+    "total_indexes": 3,
+    "pragma_settings": ["journal_mode=WAL", "foreign_keys=ON"]
+  },
+  "test_quality": {
+    "test_files": 0,
+    "test_functions": 4,
+    "test_location": "inline in src-tauri/src/domain/redaction.rs",
+    "assertions": 7,
+    "test_to_code_ratio": 0.02,
+    "tested_modules": ["redaction"],
+    "untested_modules": ["commands/terminal", "commands/ai", "commands/config", "ports/pty", "ports/claude_api", "ports/storage", "domain/context"],
+    "notes": "Only the redaction engine has tests. All other modules are untested. No frontend tests exist."
+  },
+  "hotspot_count": 3,
+  "top_hotspots": [
+    {
+      "file": "src-tauri/src/commands/ai.rs",
+      "complexity_score": 7.5,
+      "change_frequency": 3,
+      "lines": 301,
+      "reason": "Largest file, contains 3 AI command handlers with similar but not identical structure (code duplication in streaming callback wiring). Changed across multiple commits (initial implementation, SSE fix, chat addition)."
+    },
+    {
+      "file": "src-tauri/src/ports/claude_api.rs",
+      "complexity_score": 6.0,
+      "change_frequency": 2,
+      "lines": 147,
+      "reason": "SSE streaming parser with manual line-by-line state management. Changed during SSE streaming fix (v3). Buffer management and partial line handling is the most intricate logic in the codebase."
+    },
+    {
+      "file": "src/components/ai/AIPanel.tsx",
+      "complexity_score": 5.5,
+      "change_frequency": 2,
+      "lines": 237,
+      "reason": "Largest frontend file. Manages streaming subscription lifecycle, local message state, and /cmd prefix branching. Changed when chat sidebar was added (v3)."
+    }
+  ],
+  "risk_distribution": {
+    "critical": 1,
+    "high": 2,
+    "medium": 3,
+    "low": 3
+  },
+  "risks": [
+    {
+      "severity": "critical",
+      "title": "Near-zero test coverage",
+      "description": "Only 4 unit tests exist (all in redaction.rs). No integration tests for IPC commands, PTY lifecycle, or frontend components. No CI pipeline to run tests.",
+      "mitigation": "Add integration tests for the 3 command modules, unit tests for context.rs, and basic frontend component tests."
+    },
+    {
+      "severity": "high",
+      "title": "CSP disabled in Tauri config",
+      "description": "Content Security Policy is set to null in tauri.conf.json. A malicious script injected into the webview could access Tauri APIs.",
+      "mitigation": "Configure restrictive CSP before any distribution or production use."
+    },
+    {
+      "severity": "high",
+      "title": "Code duplication in AI command handlers",
+      "description": "ai_translate_command, ai_explain_error, and ai_chat share ~80% identical streaming callback wiring code. This makes changes error-prone.",
+      "mitigation": "Extract common streaming invocation into a shared helper function."
+    },
+    {
+      "severity": "medium",
+      "title": "Hardcoded model in AI commands",
+      "description": "All three AI command handlers hardcode 'claude-sonnet-4-20250514' as the model, ignoring the default_model setting from the config store.",
+      "mitigation": "Read model from StorageState config, with fallback to the hardcoded default."
+    },
+    {
+      "severity": "medium",
+      "title": "No request cancellation",
+      "description": "ai_cancel is a no-op. If a user closes the AI panel during streaming, the backend task continues to completion, wasting API tokens.",
+      "mitigation": "Track active requests with AbortHandle and cancel on ai_cancel invocation."
+    },
+    {
+      "severity": "medium",
+      "title": "AIPanel uses hardcoded shell context",
+      "description": "The AI panel sends a hardcoded ShellContext (shell_type: 'zsh', os: 'macOS', cwd: '~') instead of reading actual terminal state.",
+      "mitigation": "Connect AIPanel to terminalStore to read actual session context."
+    },
+    {
+      "severity": "low",
+      "title": "In-memory-only API key",
+      "description": "API key does not persist across app restarts unless set via environment variable.",
+      "mitigation": "Integrate keyring crate for OS keychain storage."
+    },
+    {
+      "severity": "low",
+      "title": "No error boundary in React",
+      "description": "A rendering error in any component will crash the entire application with no recovery.",
+      "mitigation": "Add React Error Boundary at the App level."
+    },
+    {
+      "severity": "low",
+      "title": "Cleanup pattern uses dynamic properties",
+      "description": "useTerminal.ts stores cleanup functions as dynamic properties on the Terminal object ((terminal as any)._cleanup). This is fragile.",
+      "mitigation": "Use React refs or a cleanup registry pattern instead."
+    }
+  ],
+  "implementation_status": {
+    "implemented": [
+      "Terminal emulation (xterm.js + WebGL renderer)",
+      "PTY management (portable-pty: spawn, read, write, resize, kill)",
+      "AI chat sidebar (full conversation UI with streaming display)",
+      "SSE streaming (real-time via bytes_stream())",
+      "Command translation (/cmd prefix in AI panel)",
+      "Error diagnosis (ai_explain_error backend command)",
+      "Secret redaction (6 regex patterns with 4 unit tests)",
+      "Settings UI (API key validation + model selection)",
+      "SQLite persistence (schema initialization + config CRUD)",
+      "Shell integration (OSC 133 scripts for bash, zsh, fish)",
+      "Context building (system prompt + error diagnosis prompt)",
+      "API key validation (live test via Claude Haiku)"
+    ],
+    "designed_but_deferred": [
+      "Block UI (OSC 133 parsing in frontend, visual block boundaries)",
+      "Command explanation (ai_explain_command endpoint)",
+      "Inline completions (ghost text suggestions)",
+      "Keychain integration (OS credential storage)",
+      "Conversation persistence (SQLite save/load conversations)",
+      "AI response caching (prompt_hash based cache)",
+      "Command history query (search/filter past commands)"
+    ],
+    "not_started": [
+      "Multi-tab terminal sessions",
+      "Session restore on app restart",
+      "Linux / Windows builds",
+      "AI tool use (suggest_command tool)",
+      "Theme switching (light/dark)",
+      "Plugin system"
+    ]
+  },
+  "design_vs_implementation_gaps": [
+    {
+      "area": "Architecture pattern",
+      "design": "Full hexagonal with Rust trait-based ports and separate adapters/ directory",
+      "actual": "Hexagonal-inspired directory layout but ports/ contains concrete implementations, no traits, no adapters/"
+    },
+    {
+      "area": "API key storage",
+      "design": "OS keychain via keyring crate with env var fallback",
+      "actual": "In-memory only, loaded from env var at startup"
+    },
+    {
+      "area": "CSS framework",
+      "design": "Tailwind CSS v4",
+      "actual": "React inline styles"
+    },
+    {
+      "area": "SSE parsing",
+      "design": "eventsource-client crate",
+      "actual": "Manual line-by-line parsing on reqwest bytes_stream()"
+    },
+    {
+      "area": "React version",
+      "design": "React 19",
+      "actual": "React 18.3"
+    },
+    {
+      "area": "Frontend state",
+      "design": "Zustand 5.x with configStore",
+      "actual": "Zustand 4.5 with terminalStore + aiStore (no configStore)"
+    },
+    {
+      "area": "Frontend components",
+      "design": "BlockOverlay, BlockActions, ChatMessage, StreamingText, CommandSuggestion, shared/ components",
+      "actual": "Only TerminalView, AIPanel, SettingsView implemented"
+    }
+  ],
+  "recommendations": [
+    {
+      "priority": 1,
+      "title": "Add integration tests for IPC commands",
+      "description": "The three command modules (terminal, ai, config) have zero test coverage. Add tests that exercise the Tauri command interface to catch regressions early. Start with terminal session lifecycle (create, write, resize, close) since it has the most complex state management.",
+      "effort": "medium"
+    },
+    {
+      "priority": 2,
+      "title": "Extract shared streaming helper in ai.rs",
+      "description": "The three AI command handlers (translate, error, chat) contain ~80% duplicated streaming callback wiring code. Extract a common function like `spawn_ai_streaming(api_key, model, system_prompt, messages, max_tokens, app, request_id)` to reduce the file from 301 to ~150 lines.",
+      "effort": "low"
+    },
+    {
+      "priority": 3,
+      "title": "Configure Content Security Policy",
+      "description": "CSP is disabled (null) in tauri.conf.json. Configure a restrictive policy that allows only the necessary script sources and connects to api.anthropic.com.",
+      "effort": "low"
+    },
+    {
+      "priority": 4,
+      "title": "Read model from config in AI commands",
+      "description": "All three AI commands hardcode the model string. Read the default_model from StorageState so the Settings UI model selection actually takes effect.",
+      "effort": "low"
+    },
+    {
+      "priority": 5,
+      "title": "Connect AIPanel to actual shell context",
+      "description": "AIPanel sends a hardcoded ShellContext. Wire it to read actual session data from terminalStore so AI responses are context-aware.",
+      "effort": "low"
+    },
+    {
+      "priority": 6,
+      "title": "Implement request cancellation",
+      "description": "Replace the ai_cancel no-op with actual AbortHandle-based cancellation of in-flight streaming requests.",
+      "effort": "medium"
+    },
+    {
+      "priority": 7,
+      "title": "Add React Error Boundary",
+      "description": "Wrap App component in an Error Boundary to prevent full-app crashes from rendering errors in individual components.",
+      "effort": "low"
+    }
+  ],
+  "score_breakdown": {
+    "documentation_coverage_raw": 55,
+    "documentation_coverage_weighted": 16.5,
+    "documentation_notes": "README present and informative. 4 detailed design docs. No ADRs, no inline Rust doc comments, no generated API docs.",
+    "architecture_clarity_raw": 82,
+    "architecture_clarity_weighted": 32.8,
+    "architecture_notes": "3 clear layers with no circular dependencies. 2 entry points clearly identified. Consistent naming conventions (90/100). Small deduction for design-vs-implementation gaps.",
+    "hotspot_severity_raw": 58,
+    "hotspot_severity_inverted": 42,
+    "hotspot_severity_weighted": 12.6,
+    "hotspot_notes": "3 hotspot files identified. ai.rs has significant code duplication. claude_api.rs has complex state management. AIPanel.tsx is the largest frontend file with mixed concerns."
+  },
+  "git_history": {
+    "total_commits": 9,
+    "commit_log": [
+      "8682495 Add README with setup instructions and feature overview",
+      "f4baf9d Add settings UI with API key management and model selection",
+      "f1f3d36 Fix SSE streaming and add AI chat sidebar",
+      "73ba851 Add v2 walkthrough after Phase 1 implementation",
+      "b422a9c Implement Phase 1: Core terminal with hexagonal architecture",
+      "14ac7f9 Add architecture diagrams (SVG + Mermaid sources)",
+      "8c3f89c Add full walkthrough deck and design decisions",
+      "0128cb8 Add system overview walkthrough deck (Marp + HTML)",
+      "1a6473a Add AI terminal research and architecture design"
+    ]
+  }
+}

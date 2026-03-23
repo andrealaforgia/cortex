@@ -1,0 +1,38 @@
+sequenceDiagram
+    participant User
+    participant AIPanel as AIPanel<br/>(React)
+    participant AIStore as aiStore<br/>(Zustand)
+    participant Bridge as tauri-bridge
+    participant AiCmd as commands/ai.rs
+    participant ClaudeAPI as claude_api.rs
+    participant Anthropic as api.anthropic.com
+
+    User->>AIPanel: Types message + Enter
+    AIPanel->>AIStore: setStreaming(true)
+    AIPanel->>Bridge: aiChat(message, context)
+    Bridge->>AiCmd: invoke("ai_chat", ...)
+    AiCmd->>AiCmd: Generate request_id
+    AiCmd-->>Bridge: { request_id, conversation_id }
+    Note over AiCmd: Spawns async task
+
+    AiCmd->>ClaudeAPI: send_message_streaming(key, model, prompt, messages, on_event)
+    ClaudeAPI->>Anthropic: POST /v1/messages (stream: true)
+    Anthropic-->>ClaudeAPI: HTTP 200 + SSE stream
+
+    loop For each SSE chunk (bytes_stream)
+        ClaudeAPI->>ClaudeAPI: Buffer bytes, parse lines
+        alt data: {"type":"content_block_delta"}
+            ClaudeAPI->>AiCmd: on_event(TextDelta(text))
+            AiCmd->>AIPanel: emit("ai:stream-chunk", {request_id, text})
+            AIPanel->>AIStore: appendStreamText(text)
+            AIStore->>AIPanel: Re-render with streaming text
+        end
+        alt data: {"type":"message_delta"}
+            ClaudeAPI->>ClaudeAPI: Capture stop_reason, output_tokens
+        end
+    end
+
+    ClaudeAPI->>AiCmd: on_event(Completion(metadata))
+    AiCmd->>AIPanel: emit("ai:stream-end", {request_id, model, tokens})
+    AIPanel->>AIStore: setStreaming(false)
+    AIPanel->>AIPanel: Finalize message in local state

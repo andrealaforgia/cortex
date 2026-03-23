@@ -1,0 +1,38 @@
+sequenceDiagram
+    participant User
+    participant XTerm as xterm.js<br/>(TerminalView)
+    participant Hook as useTerminal
+    participant Bridge as tauri-bridge
+    participant TCmd as commands/terminal.rs
+    participant PTY as ports/pty.rs<br/>(PtyHandle)
+    participant Shell as Shell Process
+
+    Hook->>Bridge: createTerminalSession()
+    Bridge->>TCmd: invoke("create_terminal_session")
+    TCmd->>PTY: PtyHandle::spawn(shell, cwd, 24, 80)
+    PTY->>Shell: Fork + exec shell
+    TCmd->>TCmd: Store handle in SessionMap
+    TCmd->>TCmd: Spawn pty_read_loop thread
+    TCmd-->>Bridge: { session_id }
+    Bridge-->>Hook: session_id
+    Hook->>Hook: Register onData, onResize listeners
+
+    loop User Interaction
+        User->>XTerm: Keystroke
+        XTerm->>Hook: terminal.onData(data)
+        Hook->>Bridge: writeToPty(session_id, bytes)
+        Bridge->>TCmd: invoke("write_to_pty")
+        TCmd->>PTY: handle.write(data)
+        PTY->>Shell: Write to PTY master
+
+        Shell->>PTY: Output to PTY slave
+        PTY->>TCmd: pty_read_loop: reader.read_chunk(buf)
+        TCmd->>XTerm: emit("pty:data", {session_id, data})
+        XTerm->>XTerm: terminal.write(text)
+    end
+
+    Note over User,Shell: Window resize triggers fitAddon.fit()
+    XTerm->>Hook: terminal.onResize({cols, rows})
+    Hook->>Bridge: resizePty(session_id, rows, cols)
+    Bridge->>TCmd: invoke("resize_pty")
+    TCmd->>PTY: handle.resize(rows, cols)

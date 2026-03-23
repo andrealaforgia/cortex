@@ -1,0 +1,65 @@
+graph LR
+    subgraph Frontend["Frontend (React)"]
+        direction TB
+        TV2["TerminalView"]
+        AIP2["AIPanel"]
+        SV2["SettingsView"]
+    end
+
+    subgraph Commands_FtoB["Tauri Commands (Frontend to Backend)"]
+        direction TB
+        C1["create_terminal_session"]
+        C2["write_to_pty"]
+        C3["resize_pty"]
+        C4["close_terminal_session"]
+        C5["ai_translate_command"]
+        C6["ai_explain_error"]
+        C7["ai_chat"]
+        C8["ai_cancel"]
+        C9["get_config"]
+        C10["set_config"]
+        C11["store_api_key"]
+        C12["has_api_key"]
+        C13["delete_api_key"]
+    end
+
+    subgraph Events_BtoF["Tauri Events (Backend to Frontend)"]
+        direction TB
+        E1["pty:data"]
+        E2["pty:exit"]
+        E3["pty:error"]
+        E4["ai:stream-chunk"]
+        E5["ai:stream-end"]
+        E6["ai:error"]
+    end
+
+    subgraph Backend["Backend (Rust)"]
+        direction TB
+        BCT["commands/terminal.rs"]
+        BCA["commands/ai.rs"]
+        BCC["commands/config.rs"]
+    end
+
+    TV2 --> C1 & C2 & C3 & C4
+    AIP2 --> C5 & C6 & C7 & C8
+    SV2 --> C9 & C10 & C11 & C12
+
+    C1 & C2 & C3 & C4 --> BCT
+    C5 & C6 & C7 & C8 --> BCA
+    C9 & C10 & C11 & C12 & C13 --> BCC
+
+    BCT --> E1 & E2 & E3
+    BCA --> E4 & E5 & E6
+
+    E1 & E2 & E3 --> TV2
+    E4 & E5 & E6 --> AIP2
+
+    classDef frontend fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4,stroke-width:2px
+    classDef command fill:#313244,stroke:#a6e3a1,color:#cdd6f4,stroke-width:1px
+    classDef event fill:#313244,stroke:#f9e2af,color:#cdd6f4,stroke-width:1px
+    classDef backend fill:#1e1e2e,stroke:#f5c2e7,color:#cdd6f4,stroke-width:2px
+
+    class TV2,AIP2,SV2 frontend
+    class C1,C2,C3,C4,C5,C6,C7,C8,C9,C10,C11,C12,C13 command
+    class E1,E2,E3,E4,E5,E6 event
+    class BCT,BCA,BCC backend

@@ -1,0 +1,54 @@
+graph TB
+    subgraph React["React Application"]
+        Main["main.tsx<br/>ReactDOM.createRoot"]
+        App["App.tsx<br/>Layout + Keyboard Shortcuts<br/>Ctrl+Shift+A / Ctrl+,"]
+
+        Main --> App
+
+        subgraph Components["Components"]
+            TV["TerminalView<br/>54 lines<br/>xterm.js container + error banner"]
+            AIP["AIPanel<br/>237 lines<br/>Chat sidebar, /cmd prefix,<br/>streaming display"]
+            SV["SettingsView<br/>188 lines<br/>API key, model selection,<br/>keyboard shortcuts"]
+        end
+
+        App --> TV
+        App -->|"showAI state"| AIP
+        App -->|"showSettings state"| SV
+
+        subgraph Hooks["Hooks"]
+            UT["useTerminal<br/>148 lines<br/>xterm.js lifecycle,<br/>PTY session, event listeners"]
+        end
+
+        TV --> UT
+
+        subgraph Stores["Zustand Stores"]
+            TS["terminalStore<br/>sessionId, blocks, error"]
+            AS["aiStore<br/>isStreaming, streamingText,<br/>conversations, activeConversation"]
+        end
+
+        UT --> TS
+        AIP --> AS
+
+        subgraph Lib["Library Layer"]
+            TB["tauri-bridge.ts<br/>162 lines<br/>Typed IPC wrappers"]
+            TY["types.ts<br/>60 lines<br/>Block, ShellContext, AppConfig,<br/>AIMessage, AIConversation"]
+        end
+
+        UT --> TB
+        AIP --> TB
+        SV --> TB
+        TS --> TY
+        AS --> TY
+    end
+
+    classDef component fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4,stroke-width:2px
+    classDef hook fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4,stroke-width:2px
+    classDef store fill:#1e1e2e,stroke:#f9e2af,color:#cdd6f4,stroke-width:2px
+    classDef lib fill:#1e1e2e,stroke:#f5c2e7,color:#cdd6f4,stroke-width:2px
+    classDef root fill:#313244,stroke:#6c7086,color:#cdd6f4,stroke-width:1px
+
+    class Main,App root
+    class TV,AIP,SV component
+    class UT hook
+    class TS,AS store
+    class TB,TY lib

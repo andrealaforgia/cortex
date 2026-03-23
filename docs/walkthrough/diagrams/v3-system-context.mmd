@@ -1,0 +1,28 @@
+graph TB
+    User["Developer<br/>(User)"]
+
+    subgraph AI_Terminal["AI Terminal (Cortex)"]
+        direction TB
+        FE["React Frontend<br/>xterm.js + AI Panel + Settings"]
+        BE["Rust Backend<br/>Tauri v2"]
+    end
+
+    Shell["Shell Process<br/>bash / zsh / fish"]
+    Claude["Anthropic Claude API<br/>api.anthropic.com"]
+    SQLite["SQLite Database<br/>Local persistence"]
+    FS["File System<br/>User's machine"]
+
+    User -->|"Keyboard / Mouse"| FE
+    FE <-->|"Tauri IPC<br/>Commands + Events"| BE
+    BE <-->|"PTY I/O<br/>portable-pty"| Shell
+    BE -->|"HTTPS + SSE<br/>reqwest streaming"| Claude
+    BE <-->|"rusqlite"| SQLite
+    Shell <-->|"File I/O"| FS
+
+    classDef system fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4,stroke-width:2px
+    classDef external fill:#313244,stroke:#6c7086,color:#cdd6f4,stroke-width:1px
+    classDef user fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:2px
+
+    class User user
+    class FE,BE system
+    class Shell,Claude,SQLite,FS external

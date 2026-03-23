@@ -1,0 +1,53 @@
+graph TB
+    subgraph Entrypoint["Entry Point"]
+        MN["main.rs<br/>6 lines"]
+        LIB["lib.rs<br/>58 lines<br/>App bootstrap, state init,<br/>command registration"]
+    end
+    MN --> LIB
+
+    subgraph Commands["commands/ -- Primary Adapters (Tauri IPC)"]
+        CT["terminal.rs<br/>140 lines<br/>create_session, write_to_pty,<br/>resize_pty, close_session"]
+        CA["ai.rs<br/>301 lines<br/>ai_translate_command,<br/>ai_explain_error, ai_chat,<br/>ai_cancel"]
+        CC["config.rs<br/>67 lines<br/>get/set_config,<br/>store/has/delete_api_key"]
+    end
+    LIB --> CT
+    LIB --> CA
+    LIB --> CC
+
+    subgraph Domain["domain/ -- Business Logic"]
+        DR["redaction.rs<br/>77 lines<br/>6 regex patterns<br/>+ 4 unit tests"]
+        DC["context.rs<br/>78 lines<br/>build_system_prompt<br/>build_error_diagnosis_prompt"]
+    end
+    CA --> DC
+    DC --> DR
+
+    subgraph Ports["ports/ -- Secondary Adapters"]
+        PP["pty.rs<br/>95 lines<br/>PtyHandle: spawn, write,<br/>resize, kill<br/>PtyReader: read_chunk"]
+        PCA["claude_api.rs<br/>147 lines<br/>send_message_streaming<br/>(SSE via bytes_stream)<br/>validate_api_key"]
+        PS["storage.rs<br/>154 lines<br/>SQLite: schema init,<br/>config CRUD,<br/>command_history save"]
+    end
+    CT --> PP
+    CA --> PCA
+    CC --> PS
+    CC --> PCA
+
+    subgraph External["External Systems"]
+        PTY["Shell<br/>Process"]
+        API["Anthropic<br/>API"]
+        DB["SQLite<br/>Database"]
+    end
+    PP --> PTY
+    PCA --> API
+    PS --> DB
+
+    classDef entry fill:#313244,stroke:#6c7086,color:#cdd6f4
+    classDef cmd fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4,stroke-width:2px
+    classDef domain fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4,stroke-width:2px
+    classDef port fill:#1e1e2e,stroke:#f9e2af,color:#cdd6f4,stroke-width:2px
+    classDef ext fill:#313244,stroke:#f38ba8,color:#cdd6f4,stroke-width:1px
+
+    class MN,LIB entry
+    class CT,CA,CC cmd
+    class DR,DC domain
+    class PP,PCA,PS port
+    class PTY,API,DB ext
