@@ -1,0 +1,88 @@
+graph TB
+    subgraph FE ["FRONTEND MODULES (React + TypeScript)"]
+        direction TB
+        subgraph FE_COMP ["Components"]
+            TV["TerminalView"]
+            BO["BlockOverlay"]
+            BA["BlockActions"]
+            AP["AIPanel"]
+            CM["ChatMessage"]
+            CS["CommandSuggestion"]
+            SV["SettingsView"]
+        end
+        subgraph FE_HOOKS ["Hooks"]
+            UT["useTerminal"]
+            UA["useAI"]
+            UC["useConfig"]
+        end
+        subgraph FE_STORES ["Stores (Zustand)"]
+            TS["terminalStore"]
+            AS["aiStore"]
+            CSS["configStore"]
+        end
+        subgraph FE_LIB ["Lib"]
+            OSC["osc133 parser"]
+            TB_LIB["tauri-bridge"]
+            TYPES["types.ts"]
+        end
+    end
+
+    subgraph IPC_BORDER ["TAURI IPC BOUNDARY"]
+        direction LR
+        CMD["Commands<br/>(invoke)"]
+        EVT["Events<br/>(listen/emit)"]
+    end
+
+    subgraph BE ["BACKEND MODULES (Rust)"]
+        direction TB
+        subgraph BE_CMD ["Commands (Primary Adapter)"]
+            TC["terminal_commands.rs"]
+            AC["ai_commands.rs"]
+            CC["config_commands.rs"]
+        end
+        subgraph BE_PORTS ["Ports (Traits)"]
+            TP["TerminalPort"]
+            AIP["AIAssistantPort"]
+            CP["ConfigPort"]
+            PP["PtyPort"]
+            CAP["ClaudeApiPort"]
+            STP["StoragePort"]
+            KP["KeychainPort"]
+        end
+        subgraph BE_DOMAIN ["Domain Logic"]
+            BLK["block.rs"]
+            CTX["context.rs"]
+            RED["redaction.rs"]
+        end
+        subgraph BE_ADAPT ["Adapters (Secondary)"]
+            PA["PortablePtyAdapter"]
+            AHA["AnthropicHttpAdapter"]
+            SA["SqliteAdapter"]
+            KA["SystemKeychainAdapter"]
+        end
+    end
+
+    FE_COMP --> FE_HOOKS
+    FE_HOOKS --> FE_STORES
+    FE_HOOKS --> FE_LIB
+    FE_LIB --> CMD
+    EVT --> FE_LIB
+
+    CMD --> BE_CMD
+    BE_CMD --> EVT
+    BE_CMD --> BE_PORTS
+    BE_PORTS --> BE_DOMAIN
+    BE_DOMAIN --> BE_PORTS
+    BE_PORTS --> BE_ADAPT
+
+    classDef frontend fill:#2d7d46,stroke:#1a5c30,color:#fff
+    classDef ipc fill:#d97706,stroke:#b45309,color:#fff
+    classDef backend fill:#1168bd,stroke:#0b4884,color:#fff
+    classDef domain fill:#7c3aed,stroke:#5b21b6,color:#fff
+    classDef adapter fill:#8b5cf6,stroke:#6d28d9,color:#fff
+
+    class TV,BO,BA,AP,CM,CS,SV,UT,UA,UC,TS,AS,CSS,OSC,TB_LIB,TYPES frontend
+    class CMD,EVT ipc
+    class TC,AC,CC,TP,AIP,CP,PP,CAP,STP,KP backend
+    class BLK,CTX,RED domain
+    class PA,AHA,SA,KA adapter

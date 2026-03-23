@@ -1,0 +1,69 @@
+graph LR
+    subgraph DRIVING ["DRIVING SIDE (Primary Adapters)"]
+        direction TB
+        UI["React Frontend<br/>(xterm.js + AI Panel)"]
+        KB["Keyboard / Mouse"]
+        SHELL_INT["Shell Integration<br/>Scripts"]
+    end
+
+    subgraph CORE ["APPLICATION CORE"]
+        direction TB
+        subgraph PP ["Primary Ports"]
+            TERM_PORT["TerminalPort"]
+            AI_PORT["AIAssistantPort"]
+            CFG_PORT["ConfigPort"]
+        end
+        subgraph DOMAIN ["Domain Logic"]
+            BLOCK_MGR["Block Manager"]
+            CTX_BUILD["Context Builder"]
+            REDACT["Redaction Engine"]
+        end
+        subgraph SP ["Secondary Ports"]
+            PTY_PORT["PtyPort"]
+            API_PORT["ClaudeApiPort"]
+            STORE_PORT["StoragePort"]
+            KEY_PORT["KeychainPort"]
+        end
+    end
+
+    subgraph DRIVEN ["DRIVEN SIDE (Secondary Adapters)"]
+        direction TB
+        PTY_ADAPT["portable-pty<br/>Adapter"]
+        HTTP_ADAPT["Anthropic HTTP<br/>Adapter"]
+        SQL_ADAPT["SQLite<br/>Adapter"]
+        KEY_ADAPT["System Keychain<br/>Adapter"]
+    end
+
+    KB --> UI
+    UI --> TERM_PORT
+    UI --> AI_PORT
+    UI --> CFG_PORT
+    SHELL_INT --> PTY_ADAPT
+
+    TERM_PORT --> BLOCK_MGR
+    AI_PORT --> CTX_BUILD
+    CTX_BUILD --> REDACT
+    REDACT --> API_PORT
+    BLOCK_MGR --> PTY_PORT
+
+    PTY_PORT --> PTY_ADAPT
+    API_PORT --> HTTP_ADAPT
+    STORE_PORT --> SQL_ADAPT
+    KEY_PORT --> KEY_ADAPT
+
+    PTY_ADAPT --> SHELL_PROC["Shell Process"]
+    HTTP_ADAPT --> CLAUDE_API["api.anthropic.com"]
+    SQL_ADAPT --> DB["SQLite File"]
+    KEY_ADAPT --> OS_KEY["OS Keychain"]
+
+    classDef driving fill:#2d7d46,stroke:#1a5c30,color:#fff
+    classDef core fill:#1168bd,stroke:#0b4884,color:#fff
+    classDef port fill:#4a90d9,stroke:#2b6cb0,color:#fff
+    classDef driven fill:#8b5cf6,stroke:#6d28d9,color:#fff
+    classDef external fill:#6b7280,stroke:#4b5563,color:#fff
+
+    class UI,KB,SHELL_INT driving
+    class BLOCK_MGR,CTX_BUILD,REDACT core
+    class TERM_PORT,AI_PORT,CFG_PORT,PTY_PORT,API_PORT,STORE_PORT,KEY_PORT port
+    class PTY_ADAPT,HTTP_ADAPT,SQL_ADAPT,KEY_ADAPT driven
+    class SHELL_PROC,CLAUDE_API,DB,OS_KEY external

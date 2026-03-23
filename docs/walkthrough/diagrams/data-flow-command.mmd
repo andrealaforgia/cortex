@@ -1,0 +1,31 @@
+sequenceDiagram
+    actor User
+    participant UI as React Frontend<br/>(xterm.js)
+    participant IPC as Tauri IPC
+    participant PTY as PTY Manager<br/>(portable-pty)
+    participant Shell as Shell Process<br/>(bash/zsh/fish)
+    participant OSC as OSC 133 Parser
+    participant Store as Block Store<br/>(Zustand)
+
+    User->>UI: Keystroke
+    UI->>IPC: invoke write_to_pty(session_id, bytes)
+    IPC->>PTY: PtyPort.write_input(bytes)
+    PTY->>Shell: Write to PTY master fd
+
+    Note over Shell: Shell processes input,<br/>executes command
+
+    Shell->>PTY: Write output to PTY slave
+    PTY->>IPC: Read from PTY master fd
+    IPC->>UI: emit pty_data(session_id, bytes)
+    UI->>UI: xterm.js.write(bytes)
+    UI->>OSC: Scan bytes for OSC 133
+
+    alt Prompt Start (OSC 133 A)
+        OSC->>Store: New block - state=prompting
+    else Command Executed (OSC 133 C)
+        OSC->>Store: Update block - state=running
+    else Command Finished (OSC 133 D)
+        OSC->>Store: Update block - state=completed, exit_code=N
+    end
+
+    Store->>UI: Re-render with block boundaries

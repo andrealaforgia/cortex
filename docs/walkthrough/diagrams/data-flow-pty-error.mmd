@@ -1,0 +1,35 @@
+sequenceDiagram
+    participant PTY as PTY Manager<br/>(Tokio Read Loop)
+    participant Shell as Shell Process
+    participant Block as Block Manager
+    participant DB as SQLite<br/>(StoragePort)
+    participant AI as AI Subsystem
+    participant IPC as Tauri Events
+    participant UI as React Frontend
+
+    Note over PTY,Shell: PTY read loop encounters failure
+
+    alt I/O Error
+        PTY->>PTY: read() returns error
+    else Process Crash
+        Shell->>PTY: EOF + non-zero signal
+    end
+
+    PTY->>Shell: Attempt kill(pid, SIGTERM)
+    PTY->>Block: Finalize incomplete blocks<br/>with error state
+    PTY->>DB: Flush command history
+    PTY->>AI: Cancel pending AI requests<br/>for this session
+    PTY->>PTY: Drop PTY file descriptors<br/>and Tokio task resources
+
+    PTY->>IPC: emit pty:error(session_id,<br/>error_type, message)
+    IPC->>UI: Receive pty:error event
+    UI->>UI: Render ErrorBanner<br/>"Session failed: {message}"
+
+    Note over UI: User sees two options
+
+    alt User clicks "Close"
+        UI->>UI: Remove terminal tab
+    else User clicks "Reopen"
+        UI->>IPC: invoke create_terminal_session()
+        Note over UI: New session in same tab
+    end

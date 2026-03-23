@@ -1,0 +1,29 @@
+graph TB
+    USER["<b>User</b><br/>Developer using<br/>the terminal"]
+
+    subgraph CORTEX ["AI Terminal (Cortex)"]
+        direction TB
+        APP["<b>Tauri Desktop App</b><br/>Terminal emulator with<br/>integrated AI assistance"]
+    end
+
+    SHELL["<b>Shell Process</b><br/>bash / zsh / fish"]
+    CLAUDE["<b>Claude API</b><br/>api.anthropic.com<br/>AI language model"]
+    KEYCHAIN["<b>OS Keychain</b><br/>macOS Keychain /<br/>Win Credential Manager"]
+    SQLITE["<b>SQLite</b><br/>Local persistence<br/>history, cache, config"]
+
+    USER -->|"Keyboard input,<br/>natural language queries"| APP
+    APP -->|"Terminal output,<br/>AI responses"| USER
+    APP -->|"PTY I/O<br/>(portable-pty)"| SHELL
+    SHELL -->|"stdout/stderr"| APP
+    APP -->|"HTTPS streaming<br/>(Messages API)"| CLAUDE
+    CLAUDE -->|"SSE text chunks"| APP
+    APP -->|"Store/retrieve<br/>API key"| KEYCHAIN
+    APP -->|"Read/write<br/>data"| SQLITE
+
+    classDef person fill:#08427b,stroke:#052e56,color:#fff
+    classDef system fill:#1168bd,stroke:#0b4884,color:#fff
+    classDef external fill:#999999,stroke:#6b6b6b,color:#fff
+
+    class USER person
+    class APP system
+    class SHELL,CLAUDE,KEYCHAIN,SQLITE external

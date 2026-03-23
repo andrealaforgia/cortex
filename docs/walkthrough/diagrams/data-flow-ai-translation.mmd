@@ -1,0 +1,38 @@
+sequenceDiagram
+    actor User
+    participant UI as React Frontend<br/>(AI Panel)
+    participant IPC as Tauri IPC<br/>(Command Handler)
+    participant CTX as Context Builder
+    participant RED as Redaction Engine
+    participant API as ClaudeApiPort<br/>(Anthropic HTTP)
+    participant Claude as api.anthropic.com
+
+    User->>UI: Natural language query<br/>"find large files over 100MB"
+    UI->>IPC: invoke ai_translate_command(query, shell_context)
+    IPC-->>UI: returns request_id
+
+    Note over IPC: Spawns async Tokio task
+
+    IPC->>CTX: Build prompt from shell_context<br/>(cwd, shell_type, OS, recent cmds)
+    CTX->>RED: Filter assembled context
+    RED->>RED: Apply regex patterns<br/>(API keys, passwords, PII)
+    RED->>API: send_message_with_tools(prompt, callbacks)
+    API->>Claude: HTTPS POST /v1/messages<br/>(streaming, tool_use mode)
+
+    loop SSE Stream
+        Claude-->>API: Server-Sent Event chunk
+        API->>IPC: callbacks.on_chunk(text)
+        IPC-->>UI: emit ai:stream-chunk(request_id, text)
+        UI->>UI: Render streaming text
+    end
+
+    Claude-->>API: tool_use: suggest_command
+    API->>IPC: callbacks.on_tool_use("suggest_command", input)
+    IPC-->>UI: emit ai:tool-use(request_id, suggestion)
+    UI->>UI: Show command suggestion<br/>with risk level + confirm/reject
+
+    API->>IPC: callbacks.on_completion(metadata)
+    IPC-->>UI: emit ai:stream-end(request_id, metadata)
+
+    User->>UI: Confirms suggested command
+    UI->>IPC: invoke write_to_pty(session_id, command_bytes)

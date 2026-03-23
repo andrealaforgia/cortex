@@ -1,0 +1,57 @@
+graph TB
+    subgraph FRONTEND ["FRONTEND (WebView)"]
+        direction TB
+        REACT["React 19 + TypeScript 5"]
+        XTERM["xterm.js 5<br/>+ WebGL Renderer"]
+        ZUSTAND["Zustand 5<br/>(State Management)"]
+        TAILWIND["Tailwind CSS 4"]
+        VITE["Vite 6<br/>(Build Tool)"]
+    end
+
+    subgraph IPC_LAYER ["IPC LAYER"]
+        TAURI_IPC["Tauri v2 IPC<br/>Commands + Events"]
+    end
+
+    subgraph BACKEND ["BACKEND (Rust)"]
+        direction TB
+        TAURI["Tauri v2<br/>(App Framework)"]
+        TOKIO["Tokio<br/>(Async Runtime)"]
+        subgraph CRATES ["Key Crates"]
+            PPTY["portable-pty<br/>(PTY Management)"]
+            REQWEST["reqwest<br/>(HTTP Client)"]
+            RUSQLITE["rusqlite<br/>(SQLite)"]
+            KEYRING["keyring<br/>(OS Keychain)"]
+            SERDE["serde<br/>(Serialization)"]
+            REGEX["regex<br/>(Redaction)"]
+        end
+    end
+
+    subgraph EXTERNAL ["EXTERNAL SYSTEMS"]
+        direction LR
+        SHELL["Shell<br/>(bash/zsh/fish)"]
+        CLAUDE["Claude API<br/>(Anthropic)"]
+        SQLITE["SQLite File"]
+        OSKEY["OS Keychain"]
+    end
+
+    REACT --> TAURI_IPC
+    XTERM --> TAURI_IPC
+    TAURI_IPC --> TAURI
+    TAURI --> TOKIO
+
+    PPTY --> SHELL
+    REQWEST --> CLAUDE
+    RUSQLITE --> SQLITE
+    KEYRING --> OSKEY
+
+    classDef frontend fill:#2d7d46,stroke:#1a5c30,color:#fff
+    classDef ipc fill:#d97706,stroke:#b45309,color:#fff
+    classDef backend fill:#1168bd,stroke:#0b4884,color:#fff
+    classDef external fill:#6b7280,stroke:#4b5563,color:#fff
+    classDef crate fill:#3b82f6,stroke:#1d4ed8,color:#fff
+
+    class REACT,XTERM,ZUSTAND,TAILWIND,VITE frontend
+    class TAURI_IPC ipc
+    class TAURI,TOKIO backend
+    class PPTY,REQWEST,RUSQLITE,KEYRING,SERDE,REGEX crate
+    class SHELL,CLAUDE,SQLITE,OSKEY external

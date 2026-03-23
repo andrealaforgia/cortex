@@ -1,0 +1,54 @@
+erDiagram
+    CONFIG {
+        text key PK
+        text value
+    }
+
+    COMMAND_HISTORY {
+        text id PK "UUID v4"
+        text session_id
+        text command
+        text output "truncated 200 lines"
+        integer exit_code
+        text cwd
+        text shell_type
+        text started_at "ISO 8601"
+        integer duration_ms
+        text created_at
+    }
+
+    AI_CACHE {
+        text prompt_hash PK "SHA-256"
+        text model
+        text response
+        integer tokens_in
+        integer tokens_out
+        text created_at
+        text last_used_at
+        integer use_count
+    }
+
+    AI_CONVERSATIONS {
+        text id PK "UUID v4"
+        text title
+        text created_at
+        text updated_at
+    }
+
+    AI_MESSAGES {
+        text id PK "UUID v4"
+        text conversation_id FK
+        text role "user or assistant"
+        text content
+        text model
+        integer tokens_in
+        integer tokens_out
+        text created_at
+    }
+
+    SCHEMA_VERSION {
+        integer version PK
+        text applied_at
+    }
+
+    AI_CONVERSATIONS ||--o{ AI_MESSAGES : "has many"
