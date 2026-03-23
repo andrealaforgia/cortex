@@ -1,16 +1,21 @@
 import { useState, useEffect } from "react";
 import TerminalView from "./components/terminal/TerminalView";
 import AIPanel from "./components/ai/AIPanel";
+import SettingsView from "./components/settings/SettingsView";
 
 export default function App() {
   const [showAI, setShowAI] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl+Shift+A toggles AI panel
       if (e.ctrlKey && e.shiftKey && e.key === "A") {
         e.preventDefault();
         setShowAI((prev) => !prev);
+      }
+      if (e.ctrlKey && e.key === ",") {
+        e.preventDefault();
+        setShowSettings((prev) => !prev);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -30,6 +35,7 @@ export default function App() {
         <TerminalView />
       </div>
       {showAI && <AIPanel onClose={() => setShowAI(false)} />}
+      {showSettings && <SettingsView onClose={() => setShowSettings(false)} />}
     </div>
   );
 }
